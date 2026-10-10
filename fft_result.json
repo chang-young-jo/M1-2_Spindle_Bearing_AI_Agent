@@ -1,0 +1,211 @@
+{
+  "file": "DATA_spindle_bearing_d,d,ng_0-3000rpm.lst",
+  "start_s": 0.0,
+  "end_s": 5.0,
+  "samples": 128000,
+  "sample_rate_hz": 25600.0,
+  "rpm_assumed": 2000.0,
+  "tolerance_hz": 1.0,
+  "envelope_band_hz": [
+    1000,
+    10000
+  ],
+  "theoretical_hz": {
+    "FTF": 15.11167145247697,
+    "BPFO": 377.7917863119242,
+    "BPFI": 455.54154702140914,
+    "BSF": 168.41383109759212
+  },
+  "axes": {
+    "X방향": {
+      "rms_raw_units": 0.20261372974105518,
+      "fft_matches": {
+        "FTF": {
+          "theoretical_hz": 15.112,
+          "measured_hz": 15.6,
+          "difference_hz": 0.488,
+          "amplitude": 0.00033829411311426345,
+          "matched": true
+        },
+        "BPFO": {
+          "theoretical_hz": 377.792,
+          "measured_hz": 376.8,
+          "difference_hz": 0.992,
+          "amplitude": 0.0019637294950557095,
+          "matched": true
+        },
+        "BPFI": {
+          "theoretical_hz": 455.542,
+          "measured_hz": 455.4,
+          "difference_hz": 0.142,
+          "amplitude": 0.0006625737792317652,
+          "matched": true
+        },
+        "BSF": {
+          "theoretical_hz": 168.414,
+          "measured_hz": 168.2,
+          "difference_hz": 0.214,
+          "amplitude": 0.0008567513873222796,
+          "matched": true
+        }
+      },
+      "envelope_fft_matches": {
+        "FTF": {
+          "theoretical_hz": 15.112,
+          "measured_hz": 15.2,
+          "difference_hz": 0.088,
+          "amplitude": 0.0058053203981102055,
+          "matched": true
+        },
+        "BPFO": {
+          "theoretical_hz": 377.792,
+          "measured_hz": 376.8,
+          "difference_hz": 0.992,
+          "amplitude": 0.0009597917186509565,
+          "matched": true
+        },
+        "BPFI": {
+          "theoretical_hz": 455.542,
+          "measured_hz": 454.8,
+          "difference_hz": 0.742,
+          "amplitude": 0.0014494589032435239,
+          "matched": true
+        },
+        "BSF": {
+          "theoretical_hz": 168.414,
+          "measured_hz": 169.4,
+          "difference_hz": 0.986,
+          "amplitude": 0.002142844628283137,
+          "matched": true
+        }
+      }
+    },
+    "Y방향": {
+      "rms_raw_units": 1.3215137751211368,
+      "fft_matches": {
+        "FTF": {
+          "theoretical_hz": 15.112,
+          "measured_hz": 15.6,
+          "difference_hz": 0.488,
+          "amplitude": 0.00040309953707405724,
+          "matched": true
+        },
+        "BPFO": {
+          "theoretical_hz": 377.792,
+          "measured_hz": 376.8,
+          "difference_hz": 0.992,
+          "amplitude": 0.0004081042400307623,
+          "matched": true
+        },
+        "BPFI": {
+          "theoretical_hz": 455.542,
+          "measured_hz": 455.2,
+          "difference_hz": 0.342,
+          "amplitude": 0.0011179201729985106,
+          "matched": true
+        },
+        "BSF": {
+          "theoretical_hz": 168.414,
+          "measured_hz": 168.6,
+          "difference_hz": 0.186,
+          "amplitude": 0.00041018575860842925,
+          "matched": true
+        }
+      },
+      "envelope_fft_matches": {
+        "FTF": {
+          "theoretical_hz": 15.112,
+          "measured_hz": 15.2,
+          "difference_hz": 0.088,
+          "amplitude": 0.04544544327653752,
+          "matched": true
+        },
+        "BPFO": {
+          "theoretical_hz": 377.792,
+          "measured_hz": 376.8,
+          "difference_hz": 0.992,
+          "amplitude": 0.014987068867239854,
+          "matched": true
+        },
+        "BPFI": {
+          "theoretical_hz": 455.542,
+          "measured_hz": 454.8,
+          "difference_hz": 0.742,
+          "amplitude": 0.007737154964671239,
+          "matched": true
+        },
+        "BSF": {
+          "theoretical_hz": 168.414,
+          "measured_hz": 169.2,
+          "difference_hz": 0.786,
+          "amplitude": 0.02335593573264203,
+          "matched": true
+        }
+      }
+    },
+    "Z방향": {
+      "rms_raw_units": 1.8508977860199585,
+      "fft_matches": {
+        "FTF": {
+          "theoretical_hz": 15.112,
+          "measured_hz": 14.4,
+          "difference_hz": 0.712,
+          "amplitude": 0.0001929635440568017,
+          "matched": true
+        },
+        "BPFO": {
+          "theoretical_hz": 377.792,
+          "measured_hz": 377.0,
+          "difference_hz": 0.792,
+          "amplitude": 0.00039924798039904226,
+          "matched": true
+        },
+        "BPFI": {
+          "theoretical_hz": 455.542,
+          "measured_hz": 455.2,
+          "difference_hz": 0.342,
+          "amplitude": 0.0005555577116602477,
+          "matched": true
+        },
+        "BSF": {
+          "theoretical_hz": 168.414,
+          "measured_hz": 168.2,
+          "difference_hz": 0.214,
+          "amplitude": 0.0004773714411673861,
+          "matched": true
+        }
+      },
+      "envelope_fft_matches": {
+        "FTF": {
+          "theoretical_hz": 15.112,
+          "measured_hz": 15.2,
+          "difference_hz": 0.088,
+          "amplitude": 0.3076387340092315,
+          "matched": true
+        },
+        "BPFO": {
+          "theoretical_hz": 377.792,
+          "measured_hz": 377.0,
+          "difference_hz": 0.792,
+          "amplitude": 0.03025656793166127,
+          "matched": true
+        },
+        "BPFI": {
+          "theoretical_hz": 455.542,
+          "measured_hz": 455.4,
+          "difference_hz": 0.142,
+          "amplitude": 0.010669328767760193,
+          "matched": true
+        },
+        "BSF": {
+          "theoretical_hz": 168.414,
+          "measured_hz": 169.4,
+          "difference_hz": 0.986,
+          "amplitude": 0.03795147160121176,
+          "matched": true
+        }
+      }
+    }
+  },
+  "caveat": "Frequency proximity alone does not confirm bearing damage. RPM must match actual selected time segment; units are unverified. Envelope band is a provisional setting and must be validated."
+}
