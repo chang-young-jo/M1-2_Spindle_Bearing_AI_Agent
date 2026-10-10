@@ -346,3 +346,19 @@ footer {
         width: 100%;
     }
 }
+
+/* 베어링 결함 분석 */
+.bearing-panel { max-width: 100%; }
+.bearing-fields { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(300px, 2fr); gap: 16px; align-items: start; }
+.bearing-fields label { display: block; font-weight: bold; line-height: 1.5; }
+.bearing-fields input, .bearing-fields textarea { display: block; width: 100%; margin-top: 8px; padding: 11px; border: 1px solid #cbd5e1; border-radius: 7px; font: inherit; font-weight: normal; }
+.bearing-fields textarea { resize: vertical; min-height: 95px; }
+.bearing-help { color: #64748b; font-size: 13px; line-height: 1.65; }
+.bearing-status { background: #f1f5f9; padding: 12px; border-radius: 8px; line-height: 1.6; }
+.bearing-status.error { background: #fef2f2; color: #b91c1c; }
+.bearing-status.success { background: #eff6ff; color: #1e40af; }
+button.secondary-btn { background: #475569; }
+button.secondary-btn:hover { background: #334155; }
+.bearing-match { font-weight: bold; color: #047857; }
+.bearing-no-match { color: #b45309; }
+@media (max-width: 600px) { .bearing-fields { grid-template-columns: 1fr; } }

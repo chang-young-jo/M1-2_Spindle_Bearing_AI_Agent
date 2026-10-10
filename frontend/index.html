@@ -25,6 +25,7 @@
         <button onclick="showPage('data')">데이터 관리</button>
         <button onclick="showPage('history')">대화 기록</button>
         <button onclick="showPage('summary')">데이터 요약</button>
+        <button onclick="showPage('bearing')">베어링 결함 분석</button>
     </nav>
 
     <main>
@@ -177,6 +178,38 @@
             </p>
             <div id="summaryContent">
                 다음 단계에서 통계 화면을 연결합니다.
+            </div>
+        </section>
+
+        <!-- 베어링 결함 주파수 분석 -->
+        <section id="bearing" class="page">
+            <h2>베어링 결함 주파수 분석</h2>
+            <p class="description">FFT 또는 Envelope FFT에서 확인한 피크 주파수를 입력하면 이론 결함 주파수와 비교합니다. 이론값 ±1 Hz 이내를 일치로 판정합니다.</p>
+            <div class="bearing-panel">
+                <div class="bearing-fields">
+                    <label for="bearingRpm">주축 회전수 (RPM)
+                        <input id="bearingRpm" type="number" min="1" step="any" value="2000">
+                    </label>
+                    <label for="bearingPeaks">측정 FFT 피크 주파수 (Hz, 쉼표 또는 줄바꿈으로 구분)
+                        <textarea id="bearingPeaks" rows="4" placeholder="예: 168.34, 377.8"></textarea>
+                    </label>
+                </div>
+                <p class="bearing-help">베어링 제원: 볼 25개 · 볼 직경 8.731 mm · PCD 89 mm · 접촉각 18° (백엔드 기본값). FFT 피크는 자동 추출되지 않습니다.</p>
+                <div class="toolbar">
+                    <button id="bearingAnalyzeButton" onclick="analyzeBearing()">주파수 비교 분석</button>
+                    <button type="button" class="secondary-btn" onclick="fillBearingExample()">BSF 예시 입력</button>
+                    <button id="bearingAiButton" type="button" onclick="requestBearingAI()" disabled>AI 해석 요청</button>
+                </div>
+                <p id="bearingStatus" class="bearing-status" role="status" aria-live="polite">회전수와 FFT 피크를 입력한 후 분석 버튼을 누르세요.</p>
+                <div id="bearingResults" hidden>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>결함 유형</th><th>이론값 (Hz)</th><th>측정 피크 (Hz)</th><th>차이 (Hz)</th><th>판정</th></tr></thead>
+                            <tbody id="bearingResultBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="bearing-help">주의: 주파수 일치는 결함 가능성 검토 근거이며, 결함 확정은 아닙니다. 진폭·고조파·측정 조건을 함께 검토해야 합니다.</p>
+                </div>
             </div>
         </section>
 
