@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Spindle Bearing AI Agent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+    <header>
+        <h1>Spindle Bearing AI Agent</h1>
+        <p>
+            공작기계 주축 진동 분석 및
+            베어링 결함 진단 지원 AI 에이전트
+        </p>
+    </header>
+
+    <nav>
+        <button onclick="showPage('chat')">AI 채팅</button>
+        <button onclick="showPage('data')">데이터 관리</button>
+        <button onclick="showPage('history')">대화 기록</button>
+        <button onclick="showPage('summary')">데이터 요약</button>
+    </nav>
+
+    <main>
+
+        <!-- AI 채팅 -->
+        <section id="chat" class="page active">
+            <div class="section-heading">
+                <h2>AI 진동 분석 채팅</h2>
+                <button onclick="startNewConversation()">
+                    + 새 대화
+                </button>
+            </div>
+
+            <p class="description">
+                1000, 2000, 3000 RPM의
+                진동 데이터를 AI가 분석합니다.
+            </p>
+
+            <div id="chatMessages" class="chat-box">
+                <div class="welcome">
+                    안녕하세요!
+                    공작기계 주축 진동 분석 AI입니다.
+                    진동 특성에 대해 질문해 주세요.
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input
+                    id="chatInput"
+                    type="text"
+                    placeholder="예: 2000 RPM Y방향 진동 분석해줘"
+                >
+                <button id="sendButton" onclick="sendMessage()">
+                    전송
+                </button>
+            </div>
+
+            <div class="sample-questions">
+                <h3>추천 질문</h3>
+                <button onclick="askExample('1000, 2000, 3000 RPM별 진동을 비교해줘')">
+                    RPM별 진동 비교
+                </button>
+                <button onclick="askExample('2000 RPM에서 X Y Z 방향별 RMS를 분석해줘')">
+                    2000 RPM 분석
+                </button>
+                <button onclick="askExample('가장 높은 진동이 발생한 조건을 알려줘')">
+                    최대 진동 조건
+                </button>
+            </div>
+        </section>
+
+        <!-- 데이터 관리 -->
+        <section id="data" class="page">
+            <h2>진동 데이터 관리</h2>
+            <p class="description">
+                Firebase에 저장된 RMS 데이터를
+                조회, 추가, 수정, 삭제합니다.
+            </p>
+
+            <div class="toolbar">
+                <select id="rpmFilter">
+                    <option value="">전체 RPM</option>
+                    <option value="1000">1000 RPM</option>
+                    <option value="2000">2000 RPM</option>
+                    <option value="3000">3000 RPM</option>
+                </select>
+
+                <select id="axisFilter">
+                    <option value="">전체 방향</option>
+                    <option value="X">X 방향</option>
+                    <option value="Y">Y 방향</option>
+                    <option value="Z">Z 방향</option>
+                </select>
+
+                <button onclick="loadData()">데이터 조회</button>
+                <button onclick="showAddForm()">+ 데이터 추가</button>
+            </div>
+
+            <p id="dataCount">데이터 관리 메뉴에서 조회하세요.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>RPM</th>
+                            <th>방향</th>
+                            <th>시간(s)</th>
+                            <th>RMS(m/s²)</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="dataForm" class="edit-form" hidden>
+                <h3 id="formTitle">진동 데이터 추가</h3>
+
+                <label for="inputDate">측정 시간 / 식별값</label>
+                <input id="inputDate" placeholder="예: T+12.0s">
+
+                <label for="inputValue">가속도 RMS (m/s²)</label>
+                <input id="inputValue" type="number" min="0" step="any">
+
+                <label for="inputRpm">RPM</label>
+                <input id="inputRpm" type="number" min="1" step="1">
+
+                <label for="inputAxis">측정 방향</label>
+                <select id="inputAxis">
+                    <option value="X">X</option>
+                    <option value="Y">Y</option>
+                    <option value="Z">Z</option>
+                </select>
+
+                <label for="inputMemo">메모</label>
+                <input id="inputMemo" placeholder="측정 메모">
+
+                <div class="toolbar">
+                    <button onclick="saveData()">저장</button>
+                    <button onclick="cancelDataForm()">취소</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 대화 기록 -->
+        <section id="history" class="page">
+            <div class="section-heading">
+                <h2>AI 대화 기록</h2>
+                <button onclick="loadConversations()">
+                    새로고침
+                </button>
+            </div>
+
+            <p class="description">
+                Firebase에 저장된 대화를 불러오거나
+                삭제할 수 있습니다.
+            </p>
+
+            <p id="historyCount">대화 기록을 불러오는 중...</p>
+
+            <div id="historyContent" class="history-list">
+            </div>
+        </section>
+
+        <!-- 데이터 요약 -->
+        <section id="summary" class="page">
+            <h2>진동 데이터 요약</h2>
+            <p class="description">
+                RPM별 RMS 통계와 진동 특성을 확인합니다.
+            </p>
+            <div id="summaryContent">
+                다음 단계에서 통계 화면을 연결합니다.
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        M1-2 AI Native Master Project
+        | Spindle Bearing AI Agent
+    </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

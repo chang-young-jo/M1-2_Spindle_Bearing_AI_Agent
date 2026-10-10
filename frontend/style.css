@@ -1,0 +1,348 @@
+
+/* Spindle Bearing AI Agent - M1-2 */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Malgun Gothic", sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.app {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+header {
+    background: #172554;
+    color: white;
+    padding: 28px;
+    border-radius: 12px;
+}
+
+header h1 {
+    margin: 0 0 10px;
+    font-size: 28px;
+}
+
+header p {
+    margin: 0;
+    color: #cbd5e1;
+}
+
+nav {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.page {
+    display: none;
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    min-height: 500px;
+}
+
+.page.active {
+    display: block;
+}
+
+.page h2 {
+    margin-top: 0;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.description {
+    color: #64748b;
+    margin-bottom: 20px;
+}
+
+/* AI 채팅 */
+
+.chat-box {
+    height: 350px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: white;
+}
+
+.welcome {
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 15px;
+    color: #1e40af;
+    line-height: 1.7;
+    white-space: pre-line;
+}
+
+.message {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+
+.message.user {
+    background: #dbeafe;
+    margin-left: 15%;
+}
+
+.message.assistant {
+    background: #f1f5f9;
+    margin-right: 15%;
+}
+
+.input-area {
+    display: flex;
+    gap: 10px;
+}
+
+.input-area input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.sample-questions {
+    margin-top: 25px;
+}
+
+.sample-questions h3 {
+    font-size: 16px;
+}
+
+.sample-questions button {
+    background: #e2e8f0;
+    color: #1e293b;
+    margin: 5px 5px 5px 0;
+}
+
+.sample-questions button:hover {
+    background: #cbd5e1;
+}
+
+/* 데이터 관리 */
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.toolbar select,
+.edit-form input,
+.edit-form select {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 450px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th, td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #eff6ff;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+tr:hover {
+    background: #f8fafc;
+}
+
+td button {
+    padding: 6px 10px;
+    margin: 2px;
+}
+
+#dataCount,
+#historyCount {
+    font-weight: bold;
+    color: #1e40af;
+}
+
+.edit-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.edit-form[hidden] {
+    display: none;
+}
+
+.edit-form h3 {
+    margin-top: 0;
+}
+
+.edit-form label {
+    display: block;
+    margin: 12px 0 5px;
+    font-weight: bold;
+}
+
+.edit-form input,
+.edit-form select {
+    width: 100%;
+}
+
+button.delete-btn {
+    background: #dc2626;
+}
+
+button.delete-btn:hover {
+    background: #b91c1c;
+}
+
+/* 대화 기록 */
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 18px;
+    background: #f8fafc;
+}
+
+.history-card h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+}
+
+.history-meta {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.history-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    color: #64748b;
+    padding: 35px 15px;
+}
+
+/* 요약 */
+
+#summaryContent {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    line-height: 1.7;
+}
+
+/* 하단 */
+
+footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .app {
+        margin: 0;
+        padding: 10px;
+    }
+
+    header {
+        padding: 20px;
+    }
+
+    header h1 {
+        font-size: 22px;
+    }
+
+    .page {
+        padding: 15px;
+    }
+
+    .input-area {
+        flex-direction: column;
+    }
+
+    .toolbar {
+        flex-direction: column;
+    }
+
+    .toolbar select,
+    .toolbar button {
+        width: 100%;
+    }
+}

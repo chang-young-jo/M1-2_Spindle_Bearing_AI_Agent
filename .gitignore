@@ -1,0 +1,52 @@
+
+# ==========================================
+# M1-2 Spindle Bearing AI Agent
+# Git Security Settings
+# ==========================================
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment variables and API keys
+.env
+.env.*
+!.env.example
+
+# Firebase service account credentials
+firebase-service-account.json
+*service-account*.json
+*firebase*adminsdk*.json
+
+# Secret files
+secrets/
+*.pem
+*.key
+
+# Local development files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Raw measurement data
+data/*.lst
+data/*.zip
+
+# Build outputs
+dist/
+build/
+node_modules/
