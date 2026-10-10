@@ -362,3 +362,26 @@ button.secondary-btn:hover { background: #334155; }
 .bearing-match { font-weight: bold; color: #047857; }
 .bearing-no-match { color: #b45309; }
 @media (max-width: 600px) { .bearing-fields { grid-template-columns: 1fr; } }
+
+
+/* RAW 자동 진단 */
+.raw-upload-panel { background:#f8fafc; border:1px solid #dbe3ef; border-radius:10px; padding:20px; margin-bottom:22px; }
+.raw-upload-panel label { display:block; font-weight:700; margin-bottom:10px; }
+.raw-upload-panel input[type=file] { display:block; max-width:100%; padding:12px; border:1px dashed #94a3b8; background:white; border-radius:8px; }
+.raw-meta { color:#475569; line-height:1.7; overflow-wrap:anywhere; }
+.raw-notice { border-left:4px solid #d97706; background:#fffbeb; color:#92400e; padding:12px; line-height:1.6; }
+.raw-chart { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin:16px 0 24px; }
+.raw-chart-group { border:1px solid #e2e8f0; border-radius:10px; padding:16px; }
+.raw-chart-group strong { display:block; margin-bottom:12px; }
+.raw-bar-row { display:grid; grid-template-columns:18px minmax(0,1fr) 52px; gap:10px; align-items:center; margin:10px 0; font-size:13px; font-variant-numeric:tabular-nums; }
+.raw-bar-track { height:16px; background:#e2e8f0; border-radius:4px; overflow:hidden; }
+.raw-bar { height:100%; border-radius:4px; }
+.raw-bar-x { background:#2563eb; }
+.raw-bar-y { background:#0d9488; }
+.raw-bar-z { background:#ea580c; }
+.raw-filters { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
+.raw-filters label { display:flex; align-items:center; gap:8px; font-size:14px; }
+.raw-filters select { padding:8px; border:1px solid #cbd5e1; border-radius:6px; background:white; }
+.raw-report { white-space:pre-wrap; line-height:1.85; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:22px; overflow-wrap:anywhere; }
+#rawResults h3 { margin-top:26px; }
+@media(max-width:600px) { .raw-chart { grid-template-columns:1fr; } .raw-upload-panel { padding:14px; } .raw-report { padding:14px; } }

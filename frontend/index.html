@@ -26,6 +26,7 @@
         <button onclick="showPage('history')">대화 기록</button>
         <button onclick="showPage('summary')">데이터 요약</button>
         <button onclick="showPage('bearing')">베어링 결함 분석</button>
+        <button onclick="showPage('raw')">RAW 자동 진단</button>
     </nav>
 
     <main>
@@ -210,6 +211,46 @@
                     </div>
                     <p class="bearing-help">주의: 주파수 일치는 결함 가능성 검토 근거이며, 결함 확정은 아닙니다. 진폭·고조파·측정 조건을 함께 검토해야 합니다.</p>
                 </div>
+            </div>
+        </section>
+
+
+        <!-- RAW 파일 자동 진단 -->
+        <section id="raw" class="page">
+            <h2>RAW 진동 데이터 자동 진단</h2>
+            <p class="description">주축 진동 RAW 파일을 서버에 업로드해 5초 구간 FFT·Envelope FFT와 AI 보고서를 생성합니다. 분석 결과는 탐색용이며 결함 확정이 아닙니다.</p>
+            <div class="raw-upload-panel">
+                <label for="rawFile">RAW 진동 파일 (.lst 또는 .csv, 최대 70 MB)</label>
+                <input id="rawFile" type="file" accept=".lst,.csv">
+                <div class="toolbar">
+                    <button id="rawAnalyzeButton" type="button" onclick="analyzeRawUpload()">RAW 업로드 및 AI 진단</button>
+                    <button id="rawDownloadButton" type="button" class="secondary-btn" onclick="downloadRawJson()" disabled>결과 JSON 다운로드</button>
+                </div>
+                <p id="rawStatus" class="bearing-status" role="status" aria-live="polite">파일을 선택한 후 분석 버튼을 누르세요. 처리에는 시간이 걸릴 수 있습니다.</p>
+            </div>
+            <div id="rawResults" hidden>
+                <h3>분석 개요</h3>
+                <p id="rawMeta" class="raw-meta"></p>
+                <p id="rawNotice" class="raw-notice"></p>
+                <h3>RPM별 X/Y/Z RMS (5초 구간, m/s²)</h3>
+                <div id="rawRmsChart" class="raw-chart" role="img" aria-label="RPM별 진동 RMS 막대 그래프"></div>
+                <div class="table-container"><table>
+                    <thead><tr><th>RPM</th><th>방향</th><th>5초 RMS (m/s²)</th><th>Firebase 비교용 6초 RMS 평균 (m/s²)</th></tr></thead>
+                    <tbody id="rawRmsBody"></tbody>
+                </table></div>
+                <h3>결함주파수 후보 판정표</h3>
+                <p class="bearing-help">탐색 피크는 결함 확정이나 결함 확률을 뜻하지 않습니다. 이론값과 측정값은 정수 Hz로 표시합니다.</p>
+                <div class="raw-filters">
+                    <label for="rawRpmFilter">회전수 <select id="rawRpmFilter"><option value="all">전체 RPM</option><option value="1000">1000</option><option value="2000">2000</option><option value="3000">3000</option></select></label>
+                    <label for="rawAxisFilter">방향 <select id="rawAxisFilter"><option value="all">전체 방향</option><option value="X">X</option><option value="Y">Y</option><option value="Z">Z</option></select></label>
+                    <label for="rawMethodFilter">분석 방법 <select id="rawMethodFilter"><option value="all">전체</option><option value="FFT">FFT</option><option value="Envelope FFT">Envelope FFT</option></select></label>
+                </div>
+                <div class="table-container"><table>
+                    <thead><tr><th>RPM</th><th>방향</th><th>방법</th><th>후보</th><th>이론 Hz</th><th>측정 Hz</th><th>SNR dB</th><th>탐색 판정</th></tr></thead>
+                    <tbody id="rawPeakBody"></tbody>
+                </table></div>
+                <h3>AI 자동 진단 보고서</h3>
+                <div id="rawReport" class="raw-report"></div>
             </div>
         </section>
 
