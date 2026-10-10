@@ -751,6 +751,17 @@ Spindle Bearing AI Agent는 실제 공작기계 주축 진동 데이터를 대�
 
 ---
 
+## M1-2 공식 과제 기능 증빙
+
+### 1. 데이터 기반 AI 채팅
+![AI 채팅 화면](screenshots/01_ai_chat.png)
+
+### 2. 데이터 관리 (CRUD)
+![데이터 관리 화면](screenshots/02_data_crud.png)
+
+### 3. 대화 기록 저장 및 불러오기
+![대화 기록 화면](screenshots/03_conversation_history.png)
+
 **2026 CODISEI AI Native Master Final Project**
 
 **Spindle Bearing AI Agent**
