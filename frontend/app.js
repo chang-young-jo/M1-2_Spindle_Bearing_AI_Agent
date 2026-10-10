@@ -10,6 +10,8 @@ let conversationId = null;
 let vibrationRecords = [];
 let editingDataId = null;
 let chatBusy = false;
+let bearingAnalysisForChat = null;
+let latestBearingInput = null;
 
 
 // ==========================================
@@ -107,7 +109,8 @@ async function sendMessage() {
             },
             body: JSON.stringify({
                 message: message,
-                conversation_id: conversationId
+                conversation_id: conversationId,
+                ...(bearingAnalysisForChat ? { bearing_analysis: bearingAnalysisForChat } : {})
             })
         });
 
@@ -123,6 +126,7 @@ async function sendMessage() {
 
         conversationId = data.conversation_id;
         addMessage("assistant", data.answer);
+        bearingAnalysisForChat = null;
 
     } catch (error) {
         addMessage(
@@ -589,3 +593,236 @@ document.getElementById("rpmFilter")
 
 document.getElementById("axisFilter")
     .addEventListener("change", loadData);
+
+
+// ==========================================
+// 17. 베어링 결함 주파수 비교 및 AI 해석
+// ==========================================
+
+function fillBearingExample() {
+    document.getElementById("bearingRpm").value = "2000";
+    document.getElementById("bearingPeaks").value = "168.34";
+    document.getElementById("bearingStatus").textContent =
+        "예시 입력값입니다. 실제 FFT 측정값과 구분해 주세요.";
+    document.getElementById("bearingStatus").className =
+        "bearing-status";
+    document.getElementById("bearingResults").hidden = true;
+    document.getElementById("bearingAiButton").disabled = true;
+    latestBearingInput = null;
+}
+
+async function analyzeBearing() {
+    const rpm = Number(
+        document.getElementById("bearingRpm").value
+    );
+
+    const raw = document.getElementById("bearingPeaks").value.trim();
+    const tokens = raw.split(/[,\s;]+/).filter(Boolean);
+    const peaks = tokens.map(Number);
+
+    const status = document.getElementById("bearingStatus");
+    const button = document.getElementById("bearingAnalyzeButton");
+    const aiButton = document.getElementById("bearingAiButton");
+    const results = document.getElementById("bearingResults");
+
+    status.className = "bearing-status";
+    results.hidden = true;
+    aiButton.disabled = true;
+    latestBearingInput = null;
+
+    if (
+        !Number.isFinite(rpm) ||
+        rpm <= 0 ||
+        !document.getElementById("bearingRpm").value.trim()
+    ) {
+        status.className = "bearing-status error";
+        status.textContent = "올바른 양수 RPM을 입력하세요.";
+        return;
+    }
+
+    if (
+        !tokens.length ||
+        peaks.some(p => !Number.isFinite(p) || p < 0)
+    ) {
+        status.className = "bearing-status error";
+        status.textContent =
+            "0 이상의 FFT 피크 주파수를 쉼표 또는 줄바꿈으로 입력하세요.";
+        return;
+    }
+
+    if (peaks.length > 20000) {
+        status.className = "bearing-status error";
+        status.textContent =
+            "피크 주파수는 최대 20,000개까지 입력할 수 있습니다.";
+        return;
+    }
+
+    const payload = {
+        rpm,
+        peak_frequencies_hz: peaks,
+        tolerance_hz: 1.0
+    };
+
+    button.disabled = true;
+    status.textContent =
+        "백엔드에서 주파수 일치 여부를 계산하고 있습니다...";
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/api/bearing/analyze`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                typeof result.detail === "string"
+                    ? result.detail
+                    : JSON.stringify(result.detail || result)
+            );
+        }
+
+        const matches = result.frequency_matches || {};
+        const tbody = document.getElementById("bearingResultBody");
+
+        tbody.replaceChildren();
+
+        let matchCount = 0;
+
+        for (const name of ["FTF", "BPFO", "BPFI", "BSF"]) {
+            const item = matches[name];
+            if (!item) continue;
+
+            const tr = document.createElement("tr");
+
+            const fmt = value =>
+                value === null || value === undefined
+                    ? "-"
+                    : Number(value).toFixed(2);
+
+            const values = [
+                name,
+                fmt(item.theoretical_hz),
+                fmt(item.measured_hz),
+                fmt(item.difference_hz),
+                item.judgement ||
+                    (item.matched
+                        ? "주파수 일치"
+                        : "주파수 불일치")
+            ];
+
+            values.forEach((value, index) => {
+                const td = document.createElement("td");
+                td.textContent = value;
+
+                if (index === 4) {
+                    td.className = item.matched
+                        ? "bearing-match"
+                        : "bearing-no-match";
+                }
+
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+
+            if (item.matched) {
+                matchCount++;
+            }
+        }
+
+        if (!tbody.children.length) {
+            throw new Error(
+                "분석 결과에 주파수 비교 항목이 없습니다."
+            );
+        }
+
+        latestBearingInput = payload;
+        results.hidden = false;
+        aiButton.disabled = false;
+
+        status.className = "bearing-status success";
+        status.textContent =
+            `분석 완료: ${result.rpm ?? rpm} RPM · ` +
+            `피크 ${peaks.length}개 · ` +
+            `일치 항목 ${matchCount}개 / 4개 ` +
+            `(허용오차 ±1 Hz)`;
+
+    } catch (error) {
+        status.className = "bearing-status error";
+        status.textContent =
+            `분석 실패: ${error.message}. ` +
+            "Render 배포 상태 및 API 주소를 확인하세요.";
+
+    } finally {
+        button.disabled = false;
+    }
+}
+
+function requestBearingAI() {
+    if (!latestBearingInput) {
+        alert("먼저 베어링 주파수 비교 분석을 실행하세요.");
+        return;
+    }
+
+    if (chatBusy) {
+        alert(
+            "진행 중인 AI 답변이 완료된 후 다시 시도하세요."
+        );
+        return;
+    }
+
+    bearingAnalysisForChat = {
+        ...latestBearingInput,
+        peak_frequencies_hz: [
+            ...latestBearingInput.peak_frequencies_hz
+        ]
+    };
+
+    showPage("chat");
+
+    document.getElementById("chatInput").value =
+        `${latestBearingInput.rpm} RPM의 FFT 후보 피크 ` +
+        `${latestBearingInput.peak_frequencies_hz.join(", ")} Hz에 대한 ` +
+        "BPFO, BPFI, BSF, FTF 주파수 일치 여부를 ±1 Hz 기준으로 " +
+        "해석하고, 결함 확정이 아닌 추가 점검 권고사항을 알려줘. " +
+        "이 피크들은 사용자가 입력한 값이며 실제 RAW FFT " +
+        "자동 분석 결과는 아닙니다.";
+
+    sendMessage();
+}
+
+
+// 입력값이 바뀌면 이전 분석 결과를 AI에 전달하지 않습니다.
+for (const id of ["bearingRpm", "bearingPeaks"]) {
+    document.getElementById(id).addEventListener(
+        "input",
+        () => {
+            latestBearingInput = null;
+
+            document.getElementById(
+                "bearingAiButton"
+            ).disabled = true;
+
+            document.getElementById(
+                "bearingResults"
+            ).hidden = true;
+
+            document.getElementById(
+                "bearingStatus"
+            ).className = "bearing-status";
+
+            document.getElementById(
+                "bearingStatus"
+            ).textContent =
+                "입력값이 변경되었습니다. 다시 분석해 주세요.";
+        }
+    );
+}
