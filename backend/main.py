@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, firestore
 from openai import OpenAI
 from pydantic import BaseModel, Field, field_validator
+from bearing_analysis import analyze_fft_peaks
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
@@ -185,9 +186,28 @@ def delete_data(data_id: str):
         raise HTTPException(status_code=500, detail='데이터 삭제 실패') from exc
 
 
+class BearingAnalyzeRequest(BaseModel):
+    rpm: float = Field(gt=0)
+    peak_frequencies_hz: list[float] = Field(default_factory=list, max_length=20000)
+    tolerance_hz: float = Field(default=1.0, ge=0, le=100)
+
+
+@app.post('/api/bearing/analyze')
+def bearing_analyze(request: BearingAnalyzeRequest):
+    try:
+        return analyze_fft_peaks(
+            rpm=request.rpm,
+            peak_frequencies_hz=request.peak_frequencies_hz,
+            tolerance_hz=request.tolerance_hz,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     conversation_id: str | None = None
+    bearing_analysis: dict[str, Any] | None = None
 
 
 def build_vibration_context():
@@ -213,6 +233,20 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=503, detail='OPENAI_API_KEY가 설정되지 않았습니다.')
     try:
         context = build_vibration_context()
+        if request.bearing_analysis is not None:
+            # A user-supplied analysis is not a verified measurement. Recalculate matches
+            # server-side from only the RPM and candidate peak frequencies.
+            supplied = request.bearing_analysis
+            try:
+                analysis = analyze_fft_peaks(
+                    rpm=float(supplied['rpm']),
+                    peak_frequencies_hz=supplied['peak_frequencies_hz'],
+                    tolerance_hz=1.0,
+                )
+            except (KeyError, ValueError, TypeError) as exc:
+                raise HTTPException(status_code=422, detail='bearing_analysis 형식이 올바르지 않습니다.') from exc
+            context += ('\n추가로 전달된 FFT 후보 피크 분석 결과(측정 출처 미검증):\n'
+                        + json.dumps(analysis, ensure_ascii=False))
         collection = db.collection('conversations')
         previous_messages = []
         conversation_ref = None
@@ -238,7 +272,9 @@ def chat(request: ChatRequest):
 4. RPM 및 X/Y/Z 방향별 차이를 분석합니다.
 5. 없는 측정값을 추측하지 않습니다.
 6. RMS만으로 베어링 결함을 확정하지 않습니다.
-7. BSF 관련 측정 결과가 없으면 분석 불가를 설명합니다.
+7. FFT 후보 피크가 제공되지 않으면 BSF 등 결함 주파수 측정 결과는 없다고 설명합니다.
+9. 제공된 FFT 후보 피크와 이론 주파수 차이가 ±1 Hz 이내면 주파수 일치로 판단합니다. 주파수 일치만으로 베어링 결함을 확정하지 않습니다.
+10. 별도로 제공된 FFT 후보 피크는 측정 출처가 검증되지 않은 입력값임을 명시합니다.
 8. 이전 대화 문맥을 참고하되 실제 측정값을 우선합니다.'''
         response = client.responses.create(model=OPENAI_MODEL, instructions=system_prompt,
                                            input=messages, max_output_tokens=700)
