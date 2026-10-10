@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, firestore
 from openai import OpenAI
 from pydantic import BaseModel, Field, field_validator
-from bearing_analysis import analyze_fft_peaks
+from backend.bearing_analysis import analyze_fft_peaks
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
