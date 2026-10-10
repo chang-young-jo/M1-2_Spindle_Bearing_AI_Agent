@@ -1,5 +1,7 @@
 """Spindle Bearing AI Agent — FastAPI backend (local / Render)."""
 import json
+import csv
+import math
 import logging
 import os
 import re
@@ -20,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title='Spindle Bearing AI Agent', description='공작기계 주축 진동 데이터 분석 API', version='1.1.0')
+app = FastAPI(title='Spindle Bearing AI Agent', description='공작기계 주축 진동 데이터 분석 API', version='1.2.0')
 local_origins = ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:3000', 'https://m1-2spindlebearingaiagent-frontend.vercel.app']
 extra_origins = [s.strip().rstrip('/') for s in os.getenv('FRONTEND_ORIGINS', '').split(',') if s.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=local_origins + extra_origins,
@@ -204,10 +206,78 @@ def bearing_analyze(request: BearingAnalyzeRequest):
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
+# ------------------------------------------------------------
+# Server-side, precomputed RAW FFT reports (no arbitrary file paths)
+# ------------------------------------------------------------
+REPORT_DIR = BASE_DIR.parent / 'fft_results'
+DETAIL_REPORT = REPORT_DIR / 'bearing_frequency_comparison_v2.csv'
+SUMMARY_REPORT = REPORT_DIR / 'bearing_fault_summary_v2.csv'
+
+
+def _csv_rows(path: Path, maximum_rows: int) -> list[dict[str, Any]]:
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=f'분석 결과 파일이 서버에 없습니다: {path.name}. '
+                   '로컬에서 분석을 실행하고 fft_results 폴더를 확인하세요.'
+        )
+    if path.stat().st_size > 2_000_000:
+        raise HTTPException(status_code=413, detail='분석 결과 파일이 너무 큽니다.')
+    with path.open('r', encoding='utf-8-sig', newline='') as handle:
+        reader = csv.DictReader(handle)
+        rows = []
+        for row in reader:
+            if len(rows) >= maximum_rows:
+                raise HTTPException(status_code=422, detail='예상보다 분석 결과 행이 많습니다.')
+            rows.append({key: (value if value != '' else None) for key, value in row.items()})
+    return rows
+
+
+def _raw_fft_report() -> dict[str, Any]:
+    details = _csv_rows(DETAIL_REPORT, 200)
+    summary = _csv_rows(SUMMARY_REPORT, 20)
+    if not details or not summary:
+        raise HTTPException(status_code=422, detail='FFT 분석 결과 파일이 비어 있습니다.')
+    return {
+        'source': 'server_local_precomputed_csv',
+        'verified_raw_file': False,
+        'frequency_display': 'integer_hz',
+        'matching_precision': 'original_values_used_by_offline_analysis',
+        'diagnostic_notice': '국소 피크와 강한 피크는 결함 확정이 아닙니다. '
+                             'CSV에 표시된 정수 Hz만으로 원본 정밀도의 판정을 재검증할 수 없습니다.',
+        'detail_count': len(details),
+        'summary': summary,
+        'details': details,
+    }
+
+
+@app.get('/api/bearing/raw-report')
+def bearing_raw_report(
+    rpm: int | None = Query(default=None),
+    axis: str | None = Query(default=None),
+):
+    """Read existing server-local FFT reports; does not run FFT or upload RAW data."""
+    if rpm is not None and rpm not in (1000, 2000, 3000):
+        raise HTTPException(status_code=422, detail='rpm은 1000, 2000, 3000 중 하나여야 합니다.')
+    if axis is not None:
+        axis = axis.upper()
+        if axis not in ('X', 'Y', 'Z'):
+            raise HTTPException(status_code=422, detail='axis는 X, Y, Z 중 하나여야 합니다.')
+    report = _raw_fft_report()
+    report['details'] = [
+        row for row in report['details']
+        if (rpm is None or str(row.get('RPM')) == str(rpm))
+        and (axis is None or row.get('방향') == axis)
+    ]
+    report['filtered_count'] = len(report['details'])
+    return report
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     conversation_id: str | None = None
     bearing_analysis: dict[str, Any] | None = None
+    include_raw_fft: bool = False
 
 
 def build_vibration_context():
@@ -247,6 +317,29 @@ def chat(request: ChatRequest):
                 raise HTTPException(status_code=422, detail='bearing_analysis 형식이 올바르지 않습니다.') from exc
             context += ('\n추가로 전달된 FFT 후보 피크 분석 결과(측정 출처 미검증):\n'
                         + json.dumps(analysis, ensure_ascii=False))
+        if request.include_raw_fft:
+            # Only server-side CSV reports are used; the caller cannot supply paths.
+            report = _raw_fft_report()
+            context += ('\n서버에 저장된 오프라인 FFT 분석 결과(CSV, RAW 원본 재검증 아님):\n'
+                        + json.dumps({
+                            'source': report['source'],
+                            'diagnostic_notice': report['diagnostic_notice'],
+                            'summary': report['summary'],
+                            'strong_candidates': [
+                                {
+                                    'RPM': r.get('RPM'),
+                                    '방향': r.get('방향'),
+                                    '분석방법': r.get('분석방법'),
+                                    '결함유형': r.get('결함유형'),
+                                    '이론주파수(Hz)': r.get('이론주파수(Hz)'),
+                                    '측정피크(Hz)': r.get('측정피크(Hz)'),
+                                    'SNR(dB)': r.get('SNR(dB)'),
+                                    '강한고조파': r.get('강한고조파'),
+                                }
+                                for r in report['details']
+                                if r.get('강한피크') == '예'
+                            ][:40],
+                        }, ensure_ascii=False))
         collection = db.collection('conversations')
         previous_messages = []
         conversation_ref = None
@@ -275,7 +368,9 @@ def chat(request: ChatRequest):
 7. FFT 후보 피크가 제공되지 않으면 BSF 등 결함 주파수 측정 결과는 없다고 설명합니다.
 9. 제공된 FFT 후보 피크와 이론 주파수 차이가 ±1 Hz 이내면 주파수 일치로 판단합니다. 주파수 일치만으로 베어링 결함을 확정하지 않습니다.
 10. 별도로 제공된 FFT 후보 피크는 측정 출처가 검증되지 않은 입력값임을 명시합니다.
-8. 이전 대화 문맥을 참고하되 실제 측정값을 우선합니다.'''
+8. 이전 대화 문맥을 참고하되 실제 측정값을 우선합니다.
+11. 이론 및 측정 결함 주파수는 소수점 없이 정수 Hz로 표시하되 원본 판정 정밀도는 유지합니다.
+12. 오프라인 FFT CSV 분석 결과는 검출 후보이며 실제 결함 확정이나 검증된 결함 확률로 표현하지 않습니다.'''
         response = client.responses.create(model=OPENAI_MODEL, instructions=system_prompt,
                                            input=messages, max_output_tokens=700)
         answer = response.output_text
