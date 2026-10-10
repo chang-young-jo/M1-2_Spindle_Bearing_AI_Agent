@@ -4,7 +4,7 @@
    M1-2 Frontend JavaScript
 ========================================== */
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://m1-2-spindle-bearing-ai-agent.onrender.com";
 
 let conversationId = null;
 let vibrationRecords = [];
